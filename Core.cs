@@ -9,6 +9,7 @@ using System.Numerics;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Net;
+using System.IO;
 using HLL;
 
 namespace HLL_Viewer
@@ -16,6 +17,7 @@ namespace HLL_Viewer
     public static class Core
     {
         static Dictionary<string, object> data;
+        public static string currentSite;
         public static void LoadData(string[] rawdata)
         {
             Logger.WriteLine("---Preparing the data---");
@@ -55,6 +57,12 @@ namespace HLL_Viewer
                     Font font = new Font(int.Parse(dataBlock[1]));
                     data.Add("font" + i, font);
                 }
+                else if(dataBlock[0] == "style")
+                {
+                    Style style = new Style(Font.LoadFont(dataBlock[1].Replace("\"", "")));
+                    
+                    data.Add("style" + i, style);
+                }
                 else if (dataBlock[0] == "link")
                 {
                     try
@@ -68,6 +76,13 @@ namespace HLL_Viewer
                         Logger.WriteLine("CS error:\n" + e.Message);
                     }
                 }
+                if (dataBlock[0] == "image")
+                {
+                    Image outData = new Image(int.Parse(dataBlock[1]), int.Parse(dataBlock[2]), Image.LoadImage(dataBlock[3].Replace("\"", "")));
+                    data.Add("img" + i, outData);
+                    /*Logger.WriteLine("### ERROR! UNABLE TO DEFINE TEXT. INFEED WAS " + rawdata[i].Trim(new char[] { (char)10, (char)32, (char)9 }));
+                    Logger.WriteLine("CS error:\n" + e.Message);*/
+                }
 
             }
             Logger.WriteLine("---Data prepared enough---");
@@ -76,12 +91,14 @@ namespace HLL_Viewer
         public static void View(string[] rawdata)
         {
             int startSize = Config.textSize;
-            LoadData(rawdata);
+            currentSite = Program.homePage;
 
             Logger.WriteLine("---Started Viewing---\n");
             Logger.WriteLine("Initializing raylib window");
             Raylib.InitWindow(500, 500, "HLL Viewer");
             Raylib.SetTargetFPS(60);
+            LoadData(rawdata);
+            Raylib_cs.Font font = Raylib.GetFontDefault();
 
             Logger.WriteLine("Starting window loop");
             while (!Raylib.WindowShouldClose())
@@ -95,19 +112,20 @@ namespace HLL_Viewer
                     if (dataKey.StartsWith("text"))
                     {
                         Text dataToUse = (Text)data[dataKey];
-                        Raylib.DrawText(dataToUse.content, dataToUse.x, dataToUse.y, Config.textSize, Color.BLACK);
+                        Raylib.DrawTextEx(font, dataToUse.content, new Vector2(dataToUse.x, dataToUse.y), Config.textSize, 2, Color.BLACK);
                     }
                     else if (dataKey.StartsWith("link"))
                     {
                         Link dataToUse = (Link)data[dataKey];
-                        Raylib.DrawText(dataToUse.content, dataToUse.x, dataToUse.y, Config.textSize, Color.BLACK);
-                        
+                        Raylib.DrawTextEx(font, dataToUse.content, new Vector2(dataToUse.x, dataToUse.y), Config.textSize, 2, Color.BLACK);
+
                         if (mousePos.X > dataToUse.x && mousePos.Y > dataToUse.y && mousePos.Y < dataToUse.y + Config.textSize && mousePos.X < dataToUse.x + Raylib.MeasureText(dataToUse.content, Config.textSize))
                         {
-                            Raylib.DrawText(dataToUse.content, dataToUse.x, dataToUse.y, Config.textSize, Color.BLUE);
+                            Raylib.DrawTextEx(font, dataToUse.content, new Vector2(dataToUse.x, dataToUse.y), Config.textSize, 2, Color.BLUE);
                             if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON))
                             {
                                 LoadData(Networking.DownloadPage(dataToUse.link).Replace("\n", "").Split(";", StringSplitOptions.RemoveEmptyEntries));
+                                currentSite = dataToUse.link;
                             }
                         }
                     }
@@ -115,6 +133,17 @@ namespace HLL_Viewer
                     {
                         Font dataToUse = (Font)data[dataKey];
                         Config.textSize = dataToUse.size;
+                    }
+                    else if (dataKey.StartsWith("img"))
+                    {
+                        Image dataToUse = (Image)data[dataKey];
+                        Raylib.DrawTexture(dataToUse.image, dataToUse.x, dataToUse.y, Color.WHITE);
+                    }
+                    else if (dataKey.StartsWith("style"))
+                    {
+                        Style dataToUse = (Style)data[dataKey];
+                        font = dataToUse.font;
+                        Config.textSize = dataToUse.font.baseSize;
                     }
                 }
 
@@ -141,6 +170,31 @@ namespace HLL_Viewer
             }
         }
 
+        public class Image
+        {
+            public int x;
+            public int y;
+            public Texture2D image;
+
+            public Image(int x, int y, Texture2D image)
+            {
+                this.x = x;
+                this.y = y;
+                this.image = image;
+            }
+
+            public static Texture2D LoadImage(string path)
+            {
+                WebClient client = new WebClient();
+                
+                client.DownloadFile(path, Directory.GetCurrentDirectory() + "/" + Path.GetFileName(path));
+                
+                Texture2D returnVal = Raylib.LoadTexture(Directory.GetCurrentDirectory() + "/" + Path.GetFileName(path));
+                File.Delete(Directory.GetCurrentDirectory() + "/" + Path.GetFileName(path));
+                return returnVal;
+            }
+        }
+
         public class Link
         {
             public int x;
@@ -164,6 +218,38 @@ namespace HLL_Viewer
             public Font(int size)
             {
                 this.size = size;
+            }
+
+            public static Raylib_cs.Font LoadFont(string path)
+            {
+                WebClient client = new WebClient();
+
+                client.DownloadFile(path, Directory.GetCurrentDirectory() + "/" + Path.GetFileName(path));
+
+                Raylib_cs.Font returnVal = Raylib.LoadFont(Directory.GetCurrentDirectory() + "/" + Path.GetFileName(path));
+                File.Delete(Directory.GetCurrentDirectory() + "/" + Path.GetFileName(path));
+                return returnVal;
+            }
+        }
+
+        public class Style
+        {
+            public Raylib_cs.Font font;
+
+            public Style(Raylib_cs.Font font)
+            {
+                this.font = font;
+            }
+
+            public static Raylib_cs.Font LoadFont(string path)
+            {
+                WebClient client = new WebClient();
+
+                client.DownloadFile(path, Directory.GetCurrentDirectory() + "/" + Path.GetFileName(path));
+
+                Raylib_cs.Font returnVal = Raylib.LoadFont(Directory.GetCurrentDirectory() + "/" + Path.GetFileName(path));
+                File.Delete(Directory.GetCurrentDirectory() + "/" + Path.GetFileName(path));
+                return returnVal;
             }
         }
 

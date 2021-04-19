@@ -10,7 +10,7 @@ namespace HLL_Viewer
     class Program
     {
         static string file = Directory.GetCurrentDirectory() + "/file.hll";
-        static string homePage = "https://highlevellayout.github.io/index.hll";
+        public static string homePage = "https://highlevellayout.github.io/index.hll";
         static void Main(string[] args)
         {
             Logger.BeginLog();
@@ -22,6 +22,7 @@ namespace HLL_Viewer
             }
             //string data = File.ReadAllText(file).Replace("\n", "");
             string data = Networking.DownloadPage(homePage);
+            data = File.ReadAllText(file);
             string[] lineDataRaw = data.Split(";", StringSplitOptions.RemoveEmptyEntries);
             Logger.WriteLine("---DATA START---");
             for (int i = 0; i < lineDataRaw.Length; i++)

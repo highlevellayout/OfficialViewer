@@ -14,9 +14,12 @@ namespace HLL
 
         public static string DownloadPage(string page)
         {
+            
             if (IsValid(page))
+            {
                 return client.DownloadString(page);
-            else if(IsValid(page + "/index.hll"))
+            }
+            else if (IsValid(page + "/index.hll"))
             {
                 return client.DownloadString(page + "/index.hll");
             }
