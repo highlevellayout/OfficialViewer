@@ -11,6 +11,8 @@ using System.Runtime.InteropServices;
 using System.Net;
 using System.IO;
 using HLL;
+using System.Reflection;
+using HLL_Viewer.Functionality;
 
 namespace HLL_Viewer
 {
@@ -18,72 +20,90 @@ namespace HLL_Viewer
     {
         static Dictionary<string, object> data;
         public static string currentSite;
+        public static Type assembly;
         public static void LoadData(string[] rawdata)
         {
+            ReCTScript.CompileRScript(ReCTScript.GetRScriptFromPage(string.Join(";", rawdata)));
+            rawdata = ReCTScript.RemoveRscriptFromPage(string.Join(";", rawdata)).Split(";", StringSplitOptions.RemoveEmptyEntries);
             Logger.WriteLine("---Preparing the data---");
             data = new Dictionary<string, object>();
             for (int i = 0; i < rawdata.Length; i++)
             {
-                Logger.WriteLine("Preparing " + rawdata[i]);
-                string[] dataBlock = rawdata[i].Replace("[", "").Replace("]", "").Trim(new char[] { (char)10, (char)32, (char)9 }).Split(",");
+                if (!rawdata[i].Replace("\n", "").StartsWith("%"))
+                {
+                    Logger.WriteLine("Preparing " + rawdata[i]);
+                    string[] dataBlock = rawdata[i].Replace("[", "").Replace("]", "").Trim(new char[] { (char)10, (char)32, (char)9 }).Split(",");
 
-                for (int dataBlockI = 0; dataBlockI < dataBlock.Length; dataBlockI++)
-                {
-                    dataBlock[dataBlockI] = dataBlock[dataBlockI].Trim();
-                }
-                if (dataBlock[0] == "text")
-                {
-                    try
+                    for (int dataBlockI = 0; dataBlockI < dataBlock.Length; dataBlockI++)
                     {
-                        Text outData = new Text(int.Parse(dataBlock[1]), int.Parse(dataBlock[2]), dataBlock[3].Replace("\"", ""));
-                        data.Add("text" + i, outData);
+                        dataBlock[dataBlockI] = dataBlock[dataBlockI].Trim();
                     }
-                    catch (Exception e)
+                    if (dataBlock[0] == "text")
                     {
-                        Logger.WriteLine("### ERROR! UNABLE TO DEFINE TEXT. INFEED WAS " + rawdata[i].Trim(new char[] { (char)10, (char)32, (char)9 }));
-                        Logger.WriteLine("CS error:\n" + e.Message);
+                        try
+                        {
+                            Text outData = new Text(int.Parse(dataBlock[1]), int.Parse(dataBlock[2]), dataBlock[3].Replace("\"", ""));
+                            data.Add("text" + i, outData);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.WriteLine("### ERROR! UNABLE TO DEFINE TEXT. INFEED WAS " + rawdata[i].Trim(new char[] { (char)10, (char)32, (char)9 }));
+                            Logger.WriteLine("CS error:\n" + e.Message);
+                        }
                     }
-                }
-                else if (dataBlock[0] == "savelog")
-                {
-                    Config.saveLog = true;
-                }
-                else if (dataBlock[0] == "config")
-                {
-                    Config.textSize = int.Parse(dataBlock[1]);
-                }
-                else if (dataBlock[0] == "font")
-                {
-                    Font font = new Font(int.Parse(dataBlock[1]));
-                    data.Add("font" + i, font);
-                }
-                else if(dataBlock[0] == "style")
-                {
-                    Style style = new Style(Font.LoadFont(dataBlock[1].Replace("\"", "")));
-                    
-                    data.Add("style" + i, style);
-                }
-                else if (dataBlock[0] == "link")
-                {
-                    try
+                    else if (dataBlock[0] == "savelog")
                     {
-                        Link outData = new Link(int.Parse(dataBlock[1]), int.Parse(dataBlock[2]), dataBlock[3].Replace("\"", ""), dataBlock[4].Replace("\"", ""));
-                        data.Add("link" + i, outData);
+                        Config.saveLog = true;
                     }
-                    catch (Exception e)
+                    else if (dataBlock[0] == "config")
                     {
-                        Logger.WriteLine("### ERROR! UNABLE TO DEFINE TEXT. INFEED WAS " + rawdata[i].Trim(new char[] { (char)10, (char)32, (char)9 }));
-                        Logger.WriteLine("CS error:\n" + e.Message);
+                        Config.textSize = int.Parse(dataBlock[1]);
                     }
-                }
-                if (dataBlock[0] == "image")
-                {
-                    Image outData = new Image(int.Parse(dataBlock[1]), int.Parse(dataBlock[2]), Image.LoadImage(dataBlock[3].Replace("\"", "")));
-                    data.Add("img" + i, outData);
-                    /*Logger.WriteLine("### ERROR! UNABLE TO DEFINE TEXT. INFEED WAS " + rawdata[i].Trim(new char[] { (char)10, (char)32, (char)9 }));
-                    Logger.WriteLine("CS error:\n" + e.Message);*/
-                }
+                    else if (dataBlock[0] == "font")
+                    {
+                        Font font = new Font(int.Parse(dataBlock[1]));
+                        data.Add("font" + i, font);
+                    }
+                    else if (dataBlock[0] == "style")
+                    {
+                        Style style = new Style(Font.LoadFont(dataBlock[1].Replace("\"", "")));
 
+                        data.Add("style" + i, style);
+                    }
+                    else if (dataBlock[0] == "link")
+                    {
+                        try
+                        {
+                            Link outData = new Link(int.Parse(dataBlock[1]), int.Parse(dataBlock[2]), dataBlock[3].Replace("\"", ""), dataBlock[4].Replace("\"", ""));
+                            data.Add("link" + i, outData);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.WriteLine("### ERROR! UNABLE TO DEFINE TEXT. INFEED WAS " + rawdata[i].Trim(new char[] { (char)10, (char)32, (char)9 }));
+                            Logger.WriteLine("CS error:\n" + e.Message);
+                        }
+                    }
+                    else if (dataBlock[0] == "cmd")
+                    {
+                        try
+                        {
+                            CmdLink outData = new CmdLink(int.Parse(dataBlock[1]), int.Parse(dataBlock[2]), dataBlock[3].Replace("\"", ""), dataBlock[4].Replace("\"", ""));
+                            data.Add("cmd" + i, outData);
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.WriteLine("### ERROR! UNABLE TO DEFINE TEXT. INFEED WAS " + rawdata[i].Trim(new char[] { (char)10, (char)32, (char)9 }));
+                            Logger.WriteLine("CS error:\n" + e.Message);
+                        }
+                    }
+                    else if (dataBlock[0] == "image")
+                    {
+                        Image outData = new Image(int.Parse(dataBlock[1]), int.Parse(dataBlock[2]), Image.LoadImage(dataBlock[3].Replace("\"", "")));
+                        data.Add("img" + i, outData);
+                        /*Logger.WriteLine("### ERROR! UNABLE TO DEFINE TEXT. INFEED WAS " + rawdata[i].Trim(new char[] { (char)10, (char)32, (char)9 }));
+                        Logger.WriteLine("CS error:\n" + e.Message);*/
+                    }
+                }
             }
             Logger.WriteLine("---Data prepared enough---");
         }
@@ -91,10 +111,10 @@ namespace HLL_Viewer
         public static void View(string[] rawdata)
         {
             int startSize = Config.textSize;
-            currentSite = Program.homePage;
 
             Logger.WriteLine("---Started Viewing---\n");
             Logger.WriteLine("Initializing raylib window");
+            Raylib.SetTraceLogLevel(TraceLogType.LOG_NONE);
             Raylib.InitWindow(500, 500, "HLL Viewer");
             Raylib.SetTargetFPS(60);
             LoadData(rawdata);
@@ -126,6 +146,20 @@ namespace HLL_Viewer
                             {
                                 LoadData(Networking.DownloadPage(dataToUse.link).Replace("\n", "").Split(";", StringSplitOptions.RemoveEmptyEntries));
                                 currentSite = dataToUse.link;
+                            }
+                        }
+                    }
+                    else if (dataKey.StartsWith("cmd"))
+                    {
+                        CmdLink dataToUse = (CmdLink)data[dataKey];
+                        Raylib.DrawTextEx(font, dataToUse.content, new Vector2(dataToUse.x, dataToUse.y), Config.textSize, 2, Color.BLACK);
+
+                        if (mousePos.X > dataToUse.x && mousePos.Y > dataToUse.y && mousePos.Y < dataToUse.y + Config.textSize && mousePos.X < dataToUse.x + Raylib.MeasureText(dataToUse.content, Config.textSize))
+                        {
+                            Raylib.DrawTextEx(font, dataToUse.content, new Vector2(dataToUse.x, dataToUse.y), Config.textSize, 2, Color.BLUE);
+                            if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON))
+                            {
+                                assembly.GetMethod(dataToUse.command).Invoke(null, null);
                             }
                         }
                     }
@@ -186,7 +220,6 @@ namespace HLL_Viewer
             public static Texture2D LoadImage(string path)
             {
                 WebClient client = new WebClient();
-                
                 client.DownloadFile(path, Directory.GetCurrentDirectory() + "/" + Path.GetFileName(path));
                 
                 Texture2D returnVal = Raylib.LoadTexture(Directory.GetCurrentDirectory() + "/" + Path.GetFileName(path));
@@ -208,6 +241,22 @@ namespace HLL_Viewer
                 this.y = y;
                 this.content = content;
                 this.link = link;
+            }
+        }
+
+        public class CmdLink
+        {
+            public int x;
+            public int y;
+            public string content;
+            public string command;
+
+            public CmdLink(int x, int y, string content, string command)
+            {
+                this.x = x;
+                this.y = y;
+                this.content = content;
+                this.command = command;
             }
         }
 

@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using HLL_Viewer;
 using HLL;
 using System.Net;
+using System.Reflection;
+using ReCT;
 namespace HLL_Viewer
 {
     class Program
@@ -20,16 +22,16 @@ namespace HLL_Viewer
                 Logger.WriteLine("log folder missing! Creating...");
                 Directory.CreateDirectory(Directory.GetCurrentDirectory() + "/logs/");
             }
+            if (!Directory.Exists(Directory.GetCurrentDirectory() + "/temp/"))
+            {
+                Logger.WriteLine("temp folder missing! Creating...");
+                Directory.CreateDirectory(Directory.GetCurrentDirectory() + "/temp/");
+            }
             //string data = File.ReadAllText(file).Replace("\n", "");
             string data = Networking.DownloadPage(homePage);
-            data = File.ReadAllText(file);
+            //data = File.ReadAllText(file);
+            Core.currentSite = homePage;
             string[] lineDataRaw = data.Split(";", StringSplitOptions.RemoveEmptyEntries);
-            Logger.WriteLine("---DATA START---");
-            for (int i = 0; i < lineDataRaw.Length; i++)
-            {
-                Logger.WriteLine(lineDataRaw[i]);
-            }
-            Logger.WriteLine("---DATA END---");
             HLL_Viewer.Core.View(lineDataRaw);
             Logger.EndLog(Directory.GetCurrentDirectory() + "/logs/Log-" + DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day + "-" + DateTime.Now.Hour + "-" + DateTime.Now.Minute + "-" + DateTime.Now.Second + ".log");
         }
