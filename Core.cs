@@ -29,7 +29,7 @@ namespace HLL_Viewer
             data = new Dictionary<string, object>();
             for (int i = 0; i < rawdata.Length; i++)
             {
-                if (!rawdata[i].Replace("\n", "").StartsWith("%"))
+                if (!rawdata[i].Replace("\n", "").Replace((char)13,  (char)0).StartsWith("%"))
                 {
                     Logger.WriteLine("Preparing " + rawdata[i]);
                     string[] dataBlock = rawdata[i].Replace("[", "").Replace("]", "").Trim(new char[] { (char)10, (char)32, (char)9 }).Split(",");
@@ -159,7 +159,8 @@ namespace HLL_Viewer
                             Raylib.DrawTextEx(font, dataToUse.content, new Vector2(dataToUse.x, dataToUse.y), Config.textSize, 2, Color.BLUE);
                             if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON))
                             {
-                                assembly.GetMethod(dataToUse.command).Invoke(null, null);
+                                if(assembly != null && assembly.GetMethod(dataToUse.command) != null)
+                                    assembly.GetMethod(dataToUse.command).Invoke(null, null);
                             }
                         }
                     }

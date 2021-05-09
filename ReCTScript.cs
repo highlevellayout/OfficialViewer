@@ -16,8 +16,8 @@ namespace HLL_Viewer.Functionality
             if (script != "return;")
             {
                 File.WriteAllText(Directory.GetCurrentDirectory() + "/temp/program.rct", script);
-                ReCT.Program.Main(new string[] { Directory.GetCurrentDirectory() + "/temp/program.rct", "-s", "-f", "-o", Directory.GetCurrentDirectory() + "/temp/" + Core.currentSite + ".dll" });
-                Assembly asm = Assembly.LoadFrom(Directory.GetCurrentDirectory() + "/temp/" + Core.currentSite + ".dll");
+                ReCT.Program.Main(new string[] { Directory.GetCurrentDirectory() + "/temp/program.rct", "-s", "-f", "-o", Directory.GetCurrentDirectory() + "/temp/" + Core.currentSite.Replace("/", "-").Replace("\\", "-") + ".dll" });
+                Assembly asm = Assembly.LoadFrom(Directory.GetCurrentDirectory() + "/temp/" + Core.currentSite.Replace("/", "-").Replace("\\", "-") + ".dll");
                 System.IO.DirectoryInfo di = new DirectoryInfo(Directory.GetCurrentDirectory() + "/temp/");
                 File.Delete(Directory.GetCurrentDirectory() + "/temp/program.rct");
 

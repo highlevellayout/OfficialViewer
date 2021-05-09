@@ -29,8 +29,8 @@ namespace HLL_Viewer
             }
             //string data = File.ReadAllText(file).Replace("\n", "");
             string data = Networking.DownloadPage(homePage);
-            //data = File.ReadAllText(file);
-            Core.currentSite = homePage;
+            data = File.ReadAllText(file);
+            Core.currentSite = file;
             string[] lineDataRaw = data.Split(";", StringSplitOptions.RemoveEmptyEntries);
             HLL_Viewer.Core.View(lineDataRaw);
             Logger.EndLog(Directory.GetCurrentDirectory() + "/logs/Log-" + DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day + "-" + DateTime.Now.Hour + "-" + DateTime.Now.Minute + "-" + DateTime.Now.Second + ".log");
