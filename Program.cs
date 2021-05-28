@@ -13,7 +13,7 @@ namespace HLL_Viewer
     {
         static void Main(string[] args)
         {
-            Core.Config.printLog = true;
+            //Core.Config.printLog = true;
             //Core.Config.saveLog = true;
             Logger.BeginLog();
             WebClient webClient = new WebClient();
