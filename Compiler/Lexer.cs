@@ -73,7 +73,6 @@ namespace HLL.Compiler
                 Logger.LogError("Unknown token: " + c, true);
                 ptr++;
             }
-            Console.WriteLine("Compiled!");
             return tokens.ToArray();
         }
 

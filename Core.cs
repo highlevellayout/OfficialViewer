@@ -19,6 +19,13 @@ namespace HLL
         {
             get { return Directory.GetCurrentDirectory() + $"/logs/log-{DateTime.Now.Year}-{DateTime.Now.Month}-{DateTime.Now.Day}-{DateTime.Now.Second}.log"; }
         }
+
+        static Raylib.TraceLogCallback LogCustom()
+        {
+            return null;
+        }
+
+
         public static void Open(string page)
         {
 
@@ -27,6 +34,7 @@ namespace HLL
 
             Raylib.InitWindow(500, 500, "HLL Viewer");
             Raylib.SetTargetFPS(60);
+            Raylib.SetTraceLogLevel(TraceLogType.LOG_NONE);
             int defaultTXTSize = WidgetData.textSize;
 
             while (!Raylib.WindowShouldClose())
