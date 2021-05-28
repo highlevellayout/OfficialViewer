@@ -71,8 +71,9 @@ namespace HLL.Compiler
 
 
                 Logger.LogError("Unknown token: " + c, true);
-
+                ptr++;
             }
+            Console.WriteLine("Compiled!");
             return tokens.ToArray();
         }
 
@@ -103,7 +104,7 @@ namespace HLL.Compiler
         private void PWord(string word)
         {
             if (Defs.keywords.Contains(word)) { tokens.Add(new Token(TokenType.Keyword, word)); return; }
-
+            //tokens.Add(new Token(TokenType.Word, word));
             Logger.LogError($"Invalid word: \"{word}\" at line: {line}", true);
         }
 
@@ -121,6 +122,7 @@ namespace HLL.Compiler
                 ptr++;
             }
             ptr++;
+
             tokens.Add(new Token(TokenType.String, str));
 
         }
@@ -152,6 +154,6 @@ namespace HLL.Compiler
 
     public enum TokenType
     {
-        Keyword, String, Int, OpenBracket, CloseBracket, Newline, Comment, CommentEnd, Comma
+        Keyword, String, Int, OpenBracket, CloseBracket, Newline, Comment, CommentEnd, Comma, Word
     }
 }

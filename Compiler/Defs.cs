@@ -10,7 +10,7 @@ namespace HLL.Compiler
     {
         public static string[] keywords = new string[]
         {
-            "text"
+            "text", "font", "link"
         };
     }
 }

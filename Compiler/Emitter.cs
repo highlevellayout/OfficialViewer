@@ -39,9 +39,33 @@ namespace HLL.Compiler
 
             while (!EOF)
             {
+                if(c.type == "text")
+                {
+                    Text text = new Text();
+                    text.x = (int)c.parameters[0];
+                    text.y = (int)c.parameters[1];
+                    text.text = (string)c.parameters[2];
+                    widgets.Add(text);
+                }
+                if (c.type == "font")
+                {
+                    Font text = new Font();
+                    text.size = (int)c.parameters[0];
+                    widgets.Add(text);
+                }
+                if (c.type == "link")
+                {
+                    Link link = new Link();
+                    link.x = (int)c.parameters[0];
+                    link.y = (int)c.parameters[1];
+                    link.text = (string)c.parameters[2];
+                    link.url = (string)c.parameters[3];
+                    widgets.Add(link);
+                }
 
+
+                ptr++;
             }
-
             return widgets.ToArray();
         }
     }

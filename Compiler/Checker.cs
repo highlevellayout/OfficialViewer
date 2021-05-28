@@ -39,24 +39,60 @@ namespace HLL.Compiler
             while (!EOF)
             {
 
-
-                if(c.type == "text")
-                {
-                    if(c.parameters.Length != 3)
-                    {
-                        Logger.LogError("Invalid amount of parameters in text statement, expected 3, got " + c.parameters.Length, true);
-                    }
-                    if(c.parameterTypes != new TokenType[] {TokenType.Int, TokenType.Int, TokenType.String })
-                    {
-                        Logger.LogError("Invalid parameter types in text statement", true);
-                    }
-                }
+                CheckText();
+                CheckFont();
 
 
                 ptr++;
             }
-
             Logger.ReleaseErrors();
         }
+
+        public void CheckText()
+        {
+            if (c.type == "text")
+            {
+                if (c.parameters.Length != 3)
+                {
+                    Logger.LogError("Invalid amount of parameters in text statement, expected 3, got " + c.parameters.Length, true);
+                }
+                if (c.parameterTypes[2] != TokenType.String && c.parameterTypes[1] != TokenType.Int && c.parameterTypes[0] != TokenType.Int)
+                {
+                    Logger.LogError("Invalid parameter types in text statement", true);
+                }
+            }
+        }
+
+        public void CheckLink()
+        {
+            if (c.type == "link")
+            {
+                if (c.parameters.Length != 4)
+                {
+                    Logger.LogError("Invalid amount of parameters in text statement, expected 4, got " + c.parameters.Length, true);
+                }
+                if (c.parameterTypes[3] != TokenType.String && c.parameterTypes[2] != TokenType.String && c.parameterTypes[1] != TokenType.Int && c.parameterTypes[0] != TokenType.Int)
+                {
+                    Logger.LogError("Invalid parameter types in text statement", true);
+                }
+            }
+        }
+
+        public void CheckFont()
+        {
+            if (c.type == "font")
+            {
+                if (c.parameters.Length != 1)
+                {
+                    Logger.LogError("Invalid amount of parameters in font statement, expected 1, got " + c.parameters.Length, true);
+                }
+                if (c.parameterTypes[0] != TokenType.Int)
+                {
+                    Logger.LogError("Invalid parameter types in font statement", true);
+                }
+            }
+        }
     }
+
+ 
 }
