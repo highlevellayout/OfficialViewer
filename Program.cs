@@ -2,7 +2,7 @@
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
-using HLL_Viewer;
+using HLL.Viewer;
 using HLL;
 using System.Net;
 using System.Reflection;
@@ -11,29 +11,12 @@ namespace HLL_Viewer
 {
     class Program
     {
-        static string file = Directory.GetCurrentDirectory() + "/file.hll";
-        public static string homePage = "https://highlevellayout.github.io/index.hll";
         static void Main(string[] args)
         {
+            Core.Config.printLog = true;
+            //Core.Config.saveLog = true;
             Logger.BeginLog();
-            Logger.WriteLine("---START OF LOG---");
-            if (!Directory.Exists(Directory.GetCurrentDirectory() + "/logs/"))
-            {
-                Logger.WriteLine("log folder missing! Creating...");
-                Directory.CreateDirectory(Directory.GetCurrentDirectory() + "/logs/");
-            }
-            if (!Directory.Exists(Directory.GetCurrentDirectory() + "/temp/"))
-            {
-                Logger.WriteLine("temp folder missing! Creating...");
-                Directory.CreateDirectory(Directory.GetCurrentDirectory() + "/temp/");
-            }
-            //string data = File.ReadAllText(file).Replace("\n", "");
-            string data = Networking.DownloadPage(homePage);
-            data = File.ReadAllText(file);
-            Core.currentSite = file;
-            string[] lineDataRaw = data.Split(";", StringSplitOptions.RemoveEmptyEntries);
-            HLL_Viewer.Core.View(lineDataRaw);
-            Logger.EndLog(Directory.GetCurrentDirectory() + "/logs/Log-" + DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day + "-" + DateTime.Now.Hour + "-" + DateTime.Now.Minute + "-" + DateTime.Now.Second + ".log");
+            Core.Open("bytespace.tk/hll");
         }
     }
 
@@ -41,12 +24,14 @@ namespace HLL_Viewer
     {
         static string output = "";
         static bool logging = false;
+        static List<ErrorData> errors = new List<ErrorData>();
         public static void WriteLine(string data)
         {
             Write(data + "\n");
         }
         public static void Write(string data)
         {
+            if (Core.Config.printLog)
             Console.Write(data);
             if (logging)
                 output += data;
@@ -56,6 +41,7 @@ namespace HLL_Viewer
         {
             logging = true;
             output = "";
+            errors = new List<ErrorData>();
         }
 
         public static string EndLog(string fileName)
@@ -64,6 +50,55 @@ namespace HLL_Viewer
             if (Core.Config.saveLog)
                 File.WriteAllText(fileName, output);
             return output;
+        }
+
+        public static void LogError(string error, bool crashes)
+        {
+            errors.Add(new ErrorData(error, crashes));
+        }
+
+        public static void Error(string error, bool crashes)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            WriteLine("ERROR: " + error);
+            Console.ResetColor();
+            if (crashes)
+            {
+                EndLog(Core.logout);
+                Environment.Exit(-1);
+            }
+        }
+
+        public static void ReleaseErrors()
+        {
+            bool shouldCrash = false;
+            for (int i = 0; i < errors.Count; i++)
+            {
+                Error(errors[i].message, false);
+                if (errors[i].crashes)
+                {
+                    shouldCrash = true;
+                }
+            }
+
+            if (shouldCrash)
+            {
+                EndLog(Core.logout);
+                Environment.Exit(-1);
+            }
+        }
+
+        private class ErrorData
+        {
+
+            public string message;
+            public bool crashes;
+
+            public ErrorData(string message, bool crashes)
+            {
+                this.message = message;
+                this.crashes = crashes;
+            }
         }
     }
 }
