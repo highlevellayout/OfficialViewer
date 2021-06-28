@@ -128,6 +128,13 @@ namespace HLL
                     HLLCompiler compiler = new HLLCompiler();
                     WebClient webClient = new WebClient();
                     Logger.WriteLine("Downloading data...");
+                    if (!url.Contains("?")) {
+                        url += "/?hll=true";
+                        
+                    }
+                    else
+                        url += "&hll=true";
+                    Console.WriteLine(url);
                     string data = webClient.DownloadString(url);
                     Logger.WriteLine("Compiling data...");
                     Core.LoadWidgets(compiler.Compile(data));

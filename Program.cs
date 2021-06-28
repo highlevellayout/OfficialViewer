@@ -17,7 +17,7 @@ namespace HLL_Viewer
             //Core.Config.saveLog = true;
             Logger.BeginLog();
             WebClient webClient = new WebClient();
-            Core.Open(webClient.DownloadString("http://bytespace.tk/hll"));
+            Core.Open(webClient.DownloadString("http://rectpm.tk/?hll=true"));
         }
     }
 
